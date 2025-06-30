@@ -1,41 +1,30 @@
-# main.py
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pickle
-import os
 
-# Define a Pydantic model for request validation
-class Message(BaseModel):
-    text: str
-
-# Initialize FastAPI app
-app = FastAPI()
-
-# Load the saved model and vectorizer
-model_path = os.path.join("model", "spam_model.pkl")
-vectorizer_path = os.path.join("model", "vectorizer.pkl")
-
-with open(model_path, "rb") as f:
+# Load the model and vectorizer
+with open("model/spam_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-with open(vectorizer_path, "rb") as f:
+with open("model/vectorizer.pkl", "rb") as f:
     vectorizer = pickle.load(f)
 
-# Define a simple route to check app status
-@app.get("/")
-def read_root():
-    return {"message": "Spam Detector API is live!"}
+# Create FastAPI instance
+app = FastAPI()
 
-# Define prediction endpoint
+# Create a Pydantic model for the input
+class Message(BaseModel):
+    message: str
+
+# Define the prediction route
 @app.post("/predict")
 def predict(data: Message):
-    # Transform the text using the loaded vectorizer
-    vect_text = vectorizer.transform([data.text])
-    
-    # Make prediction
-    prediction = model.predict(vect_text)
-    
-    # Return result
-    result = "Spam" if prediction[0] == 1 else "Not Spam"
-    return {"prediction": result}
+    message = [data.message]  # Put message in a list to match vectorizer format
+    vect_msg = vectorizer.transform(message)  # Vectorize message
+    prediction = model.predict(vect_msg)[0]   # Get prediction (Spam or Not Spam)
+    confidence = max(model.predict_proba(vect_msg)[0])  # Highest probability
+
+    return {
+        "prediction": prediction,
+        "confidence": f"{confidence * 100:.2f}%"
+    }
