@@ -1,20 +1,20 @@
-import pickle
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
+import pickle
 
-# Load model and vectorizer
-with open("model/spam_model.pkl", "rb") as f:
-    model = pickle.load(f)
-with open("model/vectorizer.pkl", "rb") as f:
-    vectorizer = pickle.load(f)
+# Load the model and vectorizer
+model = pickle.load(open("model/spam_model.pkl", "rb"))
+vectorizer = pickle.load(open("model/vectorizer.pkl", "rb"))
 
 app = FastAPI()
 
+# Define input structure
 class Message(BaseModel):
-    text: str
+    message: str
 
+# Define prediction route
 @app.post("/predict")
-def predict(message: Message):
-    vector = vectorizer.transform([message.text])
+def predict(data: Message):
+    vector = vectorizer.transform([data.message])
     prediction = model.predict(vector)
-    return {"prediction": "spam" if prediction[0] == 1 else "not spam"}
+    return {"prediction": "Spam" if prediction[0] == 1 else "Not Spam"}
