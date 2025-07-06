@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 import os
@@ -6,7 +7,7 @@ import pickle
 
 app = FastAPI()
 
-# Define file download function
+# Function to download files if they don't exist
 def download_file(url, filepath):
     if not os.path.exists(filepath):
         print(f"Downloading {filepath}...")
@@ -14,27 +15,30 @@ def download_file(url, filepath):
         with open(filepath, "wb") as f:
             f.write(response.content)
 
-# Replace these with your actual direct download links
-MODEL_URL = "https://your-link/spam_model.pkl"
-VECTORIZER_URL = "https://your-link/vectorizer.pkl"
+# Direct download links from Google Drive
+MODEL_URL = "https://drive.google.com/uc?export=download&id=149SgoI94kO75BB2bM8hzKkf8ZeTNW_cF"
+VECTORIZER_URL = "https://drive.google.com/uc?export=download&id=1q_WjrCHOXExRBzFGGI2g69-LMzqs9oRO"
 
-# Paths to save files
+# File paths to store the downloaded files
 model_path = "model/spam_model.pkl"
 vectorizer_path = "model/vectorizer.pkl"
 
-# Download model files if they don't exist
+# Download the files
 download_file(MODEL_URL, model_path)
 download_file(VECTORIZER_URL, vectorizer_path)
 
-# Load the model and vectorizer
-model = pickle.load(open(model_path, "rb"))
-vectorizer = pickle.load(open(vectorizer_path, "rb"))
+# Load model and vectorizer
+with open(model_path, "rb") as f:
+    model = pickle.load(f)
+
+with open(vectorizer_path, "rb") as f:
+    vectorizer = pickle.load(f)
 
 # Define input structure
 class Message(BaseModel):
     message: str
 
-# Define prediction route
+# Prediction route
 @app.post("/predict")
 def predict(data: Message):
     vector = vectorizer.transform([data.message])
