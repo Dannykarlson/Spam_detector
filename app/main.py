@@ -1,44 +1,28 @@
-
 from fastapi import FastAPI
 from pydantic import BaseModel
+import gdown
 import os
-import requests
 import pickle
 
+# ✅ Download model files if they don't already exist
+if not os.path.exists("model/spam_model.pkl"):
+    gdown.download(id="149SgoI94kO75BB2bM8hzKkf8ZeTNW_cF", output="model/spam_model.pkl", quiet=False)
+
+if not os.path.exists("model/vectorizer.pkl"):
+    gdown.download(id="1q_WjrCHOXExRBzFGGI2g69-LMzqs9oRO", output="model/vectorizer.pkl", quiet=False)
+
+# ✅ Load the model and vectorizer
+model = pickle.load(open("model/spam_model.pkl", "rb"))
+vectorizer = pickle.load(open("model/vectorizer.pkl", "rb"))
+
+# ✅ Create FastAPI app
 app = FastAPI()
 
-# Function to download files if they don't exist
-def download_file(url, filepath):
-    if not os.path.exists(filepath):
-        print(f"Downloading {filepath}...")
-        response = requests.get(url)
-        with open(filepath, "wb") as f:
-            f.write(response.content)
-
-# Direct download links from Google Drive
-MODEL_URL = "https://drive.google.com/uc?export=download&id=149SgoI94kO75BB2bM8hzKkf8ZeTNW_cF"
-VECTORIZER_URL = "https://drive.google.com/uc?export=download&id=1q_WjrCHOXExRBzFGGI2g69-LMzqs9oRO"
-
-# File paths to store the downloaded files
-model_path = "model/spam_model.pkl"
-vectorizer_path = "model/vectorizer.pkl"
-
-# Download the files
-download_file(MODEL_URL, model_path)
-download_file(VECTORIZER_URL, vectorizer_path)
-
-# Load model and vectorizer
-with open(model_path, "rb") as f:
-    model = pickle.load(f)
-
-with open(vectorizer_path, "rb") as f:
-    vectorizer = pickle.load(f)
-
-# Define input structure
+# ✅ Input format
 class Message(BaseModel):
     message: str
 
-# Prediction route
+# ✅ Prediction endpoint
 @app.post("/predict")
 def predict(data: Message):
     vector = vectorizer.transform([data.message])
