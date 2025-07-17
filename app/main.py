@@ -1,26 +1,13 @@
-import streamlit as st
+import os
 import pickle
 
-# Load model and vectorizer
-with open("model.pkl", "rb") as f:
+# Get current file path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Load model
+with open(os.path.join(BASE_DIR, "model.pkl"), "rb") as f:
     model = pickle.load(f)
 
-with open("vectorizer.pkl", "rb") as f:
+# Load vectorizer
+with open(os.path.join(BASE_DIR, "vectorizer.pkl"), "rb") as f:
     vectorizer = pickle.load(f)
-
-st.set_page_config(page_title="Spam Detector", layout="centered")
-st.title("📧 Spam Detector")
-
-input_text = st.text_area("Enter a message:", height=150)
-
-if st.button("Check if Spam"):
-    if input_text.strip() == "":
-        st.warning("Please enter a message first.")
-    else:
-        text_vector = vectorizer.transform([input_text])
-        prediction = model.predict(text_vector)[0]
-        
-        if prediction == 1:
-            st.error("🚨 This message is SPAM!")
-        else:
-            st.success("✅ This message is NOT spam.")
